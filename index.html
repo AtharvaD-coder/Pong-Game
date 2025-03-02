@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cosmic Pong: Multi-Gravity Adventure</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+    
+    :root {
+      --primary-color: #4e54c8;
+      --secondary-color: #8f94fb;
+      --accent-color: #ff5e62;
+      --text-color: #ffffff;
+      --background-dark: #1a1a2e;
+      --panel-color: rgba(30, 30, 60, 0.8);
+      --button-hover: #6a70d6;
+    }
+    
+    body {
+      margin: 0;
+      overflow: hidden;
+      font-family: 'Orbitron', sans-serif;
+      background-color: var(--background-dark);
+      color: var(--text-color);
+      text-align: center;
+      background-image: radial-gradient(circle, #2a2a4a 0%, #1a1a2e 100%);
+    }
+
+    .game-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      margin-top: 10px;
+      background: linear-gradient(to right, var(--primary-color), var(--accent-color));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      font-size: 2.5rem;
+      letter-spacing: 2px;
+      text-shadow: 0 0 10px rgba(143, 148, 251, 0.3);
+    }
+
+    .theme-bar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin: 15px 0;
+    }
+
+    .theme-button {
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      color: var(--text-color);
+      border: none;
+      border-radius: 20px;
+      padding: 8px 16px;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .theme-button:hover {
+      background: linear-gradient(135deg, var(--button-hover), var(--secondary-color));
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .theme-button.active {
+      background: linear-gradient(135deg, var(--accent-color), var(--secondary-color));
+      box-shadow: 0 2px 8px rgba(255, 94, 98, 0.5);
+    }
+
+    .instructions {
+      margin: 15px auto;
+      max-width: 600px;
+      background-color: var(--panel-color);
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+    }
+
+    .instructions p {
+      margin: 8px 0;
+      font-size: 0.9rem;
+      line-height: 1.4;
+    }
+
+    .key {
+      display: inline-block;
+      background-color: rgba(255, 255, 255, 0.1);
+      padding: 2px 8px;
+      border-radius: 4px;
+      margin: 0 2px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .score-display {
+      position: absolute;
+      top: 20px;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .score-box {
+      display: flex;
+      gap: 100px;
+      padding: 10px 30px;
+      background-color: var(--panel-color);
+      border-radius: 30px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .player-score {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .player-score span {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      opacity: 0.8;
+    }
+
+    .player-score div {
+      font-size: 2.5rem;
+      font-weight: bold;
+      min-width: 60px;
+    }
+
+    #gameDiv {
+      position: relative;
+      border-radius: 10px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+      border: 2px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .theme-info {
+      position: absolute;
+      left: 20px;
+      top: 20px;
+      background-color: var(--panel-color);
+      padding: 8px 15px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      z-index: 100;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .theme-icon {
+      font-size: 1.2rem;
+    }
+    
+    canvas {
+      display: block;
+    }
+    
+    .vs-text {
+      font-size: 1.2rem;
+      opacity: 0.6;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="game-container">
+    <h1>COSMIC PONG</h1>
+    
+    <div class="theme-bar">
+      <button class="theme-button active" data-theme="earth">
+        <i class="fas fa-globe-americas"></i> Earth
+      </button>
+      <button class="theme-button" data-theme="moon">
+        <i class="fas fa-moon"></i> Moon
+      </button>
+      <button class="theme-button" data-theme="mars">
+        <i class="fas fa-planet-ringed"></i> Mars
+      </button>
+      <button class="theme-button" data-theme="space">
+        <i class="fas fa-star"></i> Zero-G
+      </button>
+      <button class="theme-button" data-theme="jupiter">
+        <i class="fas fa-globe"></i> Jupiter
+      </button>
+    </div>
+    
+    
+    <div class="instructions">
+      <p><span class="key">W</span><span class="key">S</span> to move left paddle, <span class="key">A</span><span class="key">D</span> to rotate</p>
+      <p><span class="key">↑</span><span class="key">↓</span> to move right paddle, <span class="key">←</span><span class="key">→</span> to rotate</p>
+      <p>Ball is affected by gravity and paddle momentum!</p>
+    </div>
+    
+    <div id="gameDiv"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/phaser@2.6.2/build/phaser.min.js"></script>
+  <script>
+    // Game constants
+    var WINDOW_HEIGHT = 450,
+      WINDOW_WIDTH = 750,
+      MOVE_SPEED = 300,
+      ROTATION_SPEED = 150,
+      SPRING_STIFFNESS = 0.1,
+      MAX_ROTATION = Math.PI / 4, // 45 degrees in radians
+      INITIAL_BALL_SPEED = 200,
+      PADDLE_WIDTH = 10,
+      PADDLE_HEIGHT = 80,
+      BALL_SIZE = 15,
+      MOMENTUM_TRANSFER = 0.8;
+      
+    // Theme settings
+    var THEMES = {
+      earth: {
+        name: "Earth",
+        gravity: 200,
+        background: '#4488aa',
+        paddleColor: 0xFFFFFF,
+        ballColor: 0xFFFFFF,
+        particleColor: 0x87CEFA,
+        icon: 'fa-globe-americas',
+        description: 'Earth Gravity'
+      },
+      moon: {
+        name: "Moon",
+        gravity: 33, // ~1/6 of Earth's gravity
+        background: '#333344',
+        paddleColor: 0xCCCCCC,
+        ballColor: 0xFFFFDD,
+        particleColor: 0xCCCCCC,
+        icon: 'fa-moon',
+        description: 'Low Gravity (1/6 Earth)'
+      },
+      mars: {
+        name: "Mars",
+        gravity: 76, // ~0.38 of Earth's gravity
+        background: '#aa5533',
+        paddleColor: 0xFF9966,
+        ballColor: 0xFFDD88,
+        particleColor: 0xCC6644,
+        icon: 'fa-planet-ringed',
+        description: 'Mars Gravity (0.38 Earth)'
+      },
+      space: {
+        name: "Zero-G",
+        gravity: 0, // No gravity
+        background: '#111133',
+        paddleColor: 0x88AAFF,
+        ballColor: 0xFFFFFF,
+        particleColor: 0x4444FF,
+        icon: 'fa-star',
+        description: 'No Gravity'
+      },
+      jupiter: {
+        name: "Jupiter",
+        gravity: 480, // ~2.4x Earth's gravity
+        background: '#994411',
+        paddleColor: 0xFFBB77,
+        ballColor: 0xFFDD44,
+        particleColor: 0xDD8844,
+        icon: 'fa-globe',
+        description: 'High Gravity (2.4x Earth)'
+      }
+    };
+    
+    // Current theme (default: earth)
+    var currentTheme = 'earth';
+
+    var mainState = {
+      preload: function () {
+        // No external assets to preload
+      },
+
+      create: function () {
+        // Initialize physics
+        game.physics.startSystem(Phaser.Physics.ARCADE);
+        this.applyTheme(currentTheme);
+        
+        // Create score display elements outside of Phaser
+        this.setupScoreDisplay();
+        
+        // Create theme info display
+        this.createThemeInfo();
+        
+        // Set collision boundaries (only for top and bottom)
+        game.physics.arcade.checkCollision.right = false;
+        game.physics.arcade.checkCollision.left = false;
+
+        // Setup key inputs
+        game.input.keyboard.addKeyCapture([
+          Phaser.Keyboard.UP, Phaser.Keyboard.DOWN,
+          Phaser.Keyboard.LEFT, Phaser.Keyboard.RIGHT,
+          Phaser.Keyboard.W, Phaser.Keyboard.S,
+          Phaser.Keyboard.A, Phaser.Keyboard.D
+        ]);
+        
+        this.cursor = game.input.keyboard.createCursorKeys();
+        this.wasd = {
+          up: game.input.keyboard.addKey(Phaser.Keyboard.W),
+          down: game.input.keyboard.addKey(Phaser.Keyboard.S),
+          left: game.input.keyboard.addKey(Phaser.Keyboard.A),
+          right: game.input.keyboard.addKey(Phaser.Keyboard.D)
+        };
+
+        // Create center line
+        this.centerLine = game.add.graphics(0, 0);
+        this.centerLine.lineStyle(2, 0xFFFFFF, 0.2);
+        this.centerLine.moveTo(game.world.centerX, 0);
+        this.centerLine.lineTo(game.world.centerX, game.world.height);
+        
+        // Create particle emitter for ball trail
+        this.ballEmitter = game.add.emitter(0, 0, 50);
+        this.ballEmitter.makeParticles('pixel');
+        this.ballEmitter.setXSpeed(-100, 100);
+        this.ballEmitter.setYSpeed(-100, 100);
+        this.ballEmitter.setScale(0.5, 1, 0.5, 1, 500);
+        this.ballEmitter.gravity = 0;
+        this.ballEmitter.setAlpha(0.7, 0, 400);
+        
+        // Create left paddle (player)
+        this.createPaddle('player', 30, game.world.centerY);
+        
+        // Create right paddle (enemy)
+        this.createPaddle('enemy', WINDOW_WIDTH - 30, game.world.centerY);
+
+        // Create ball
+        this.createBall();
+        
+        // Initialize ball movement
+        this.startBallMovement();
+      },
+      
+      createThemeInfo: function() {
+        // Create theme info element (outside of Phaser)
+        if (document.querySelector('.theme-info')) {
+          document.querySelector('.theme-info').remove();
+        }
+        
+        var themeInfo = document.createElement('div');
+        themeInfo.className = 'theme-info';
+        themeInfo.innerHTML = '<i class="fas ' + THEMES[currentTheme].icon + ' theme-icon"></i> ' + 
+                             THEMES[currentTheme].description;
+        
+        document.getElementById('gameDiv').appendChild(themeInfo);
+      },
+      
+      setupScoreDisplay: function() {
+        // Initialize scores
+        this.playerScore = 0;
+        this.enemyScore = 0;
+        
+        // Remove existing score display if present
+        if (document.querySelector('.score-display')) {
+          document.querySelector('.score-display').remove();
+        }
+        
+        // Create score display
+        var scoreDisplay = document.createElement('div');
+        scoreDisplay.className = 'score-display';
+        
+        var scoreBox = document.createElement('div');
+        scoreBox.className = 'score-box';
+        
+        var playerScoreElement = document.createElement('div');
+        playerScoreElement.className = 'player-score';
+        playerScoreElement.innerHTML = '<span>Player 1</span><div id="player1score">0</div>';
+        
+        var vsText = document.createElement('div');
+        vsText.className = 'vs-text';
+        vsText.textContent = 'VS';
+        
+        var enemyScoreElement = document.createElement('div');
+        enemyScoreElement.className = 'player-score';
+        enemyScoreElement.innerHTML = '<span>Player 2</span><div id="player2score">0</div>';
+        
+        scoreBox.appendChild(playerScoreElement);
+        scoreBox.appendChild(vsText);
+        scoreBox.appendChild(enemyScoreElement);
+        scoreDisplay.appendChild(scoreBox);
+        
+        document.getElementById('gameDiv').appendChild(scoreDisplay);
+        
+        // Store references to DOM score elements
+        this.player1ScoreElement = document.getElementById('player1score');
+        this.player2ScoreElement = document.getElementById('player2score');
+      },
+      
+      createPixelTexture: function() {
+        // Create a single pixel texture for particles
+        var pixelData = game.add.bitmapData(4, 4);
+        pixelData.fill(255, 255, 255);
+        game.cache.addBitmapData('pixel', pixelData);
+      },
+      
+      applyTheme: function(themeName) {
+        // Set background color from theme
+        game.stage.backgroundColor = THEMES[themeName].background;
+        
+        // Update current theme
+        currentTheme = themeName;
+        
+        // Create pixel texture if not created
+        if (!game.cache.checkBitmapDataKey('pixel')) {
+          this.createPixelTexture();
+        }
+        
+        // Update theme info
+        if (this.player && this.enemy && this.ball) {
+          // Update paddle and ball colors
+          this.player.clear();
+          this.player.beginFill(THEMES[themeName].paddleColor);
+          this.player.drawRect(-PADDLE_WIDTH/2, -PADDLE_HEIGHT/2, PADDLE_WIDTH, PADDLE_HEIGHT);
+          this.player.endFill();
+          
+          this.enemy.clear();
+          this.enemy.beginFill(THEMES[themeName].paddleColor);
+          this.enemy.drawRect(-PADDLE_WIDTH/2, -PADDLE_HEIGHT/2, PADDLE_WIDTH, PADDLE_HEIGHT);
+          this.enemy.endFill();
+          
+          this.ball.clear();
+          this.ball.beginFill(THEMES[themeName].ballColor);
+          this.ball.drawCircle(0, 0, BALL_SIZE);
+          this.ball.endFill();
+          
+          // Update ball gravity
+          this.ball.body.gravity.y = THEMES[themeName].gravity;
+          
+          // Update particle color
+          this.ballEmitter.forEach(function(particle) {
+            particle.tint = THEMES[themeName].particleColor;
+          });
+          
+          // Update theme info display
+          this.createThemeInfo();
+        }
+      },
+      
+      createPaddle: function(name, x, y) {
+        // Create paddle using graphics
+        this[name] = game.add.graphics(0, 0);
+        this[name].beginFill(THEMES[currentTheme].paddleColor);
+        this[name].drawRect(-PADDLE_WIDTH/2, -PADDLE_HEIGHT/2, PADDLE_WIDTH, PADDLE_HEIGHT);
+        this[name].endFill();
+        this[name].position.set(x, y);
+        
+        // Add glow effect
+        this[name].paddleGlow = game.add.graphics(0, 0);
+        this[name].paddleGlow.beginFill(THEMES[currentTheme].paddleColor, 0.3);
+        this[name].paddleGlow.drawRect(-PADDLE_WIDTH/2 - 3, -PADDLE_HEIGHT/2 - 3, PADDLE_WIDTH + 6, PADDLE_HEIGHT + 6);
+        this[name].paddleGlow.endFill();
+        this[name].paddleGlow.position.set(x, y);
+        this[name].paddleGlow.visible = false;
+        
+        game.physics.arcade.enable(this[name]);
+        this[name].body.collideWorldBounds = true;
+        this[name].body.immovable = true;
+        
+        // Set accurate hitbox
+        this[name].body.setSize(PADDLE_WIDTH, PADDLE_HEIGHT, -PADDLE_WIDTH/2, -PADDLE_HEIGHT/2);
+        
+        // Rotation properties
+        this[name].rotation = 0;
+        this[name].targetRotation = 0;
+        
+        // Track previous position for momentum calculation
+        this[name].oldX = this[name].x;
+        this[name].oldY = this[name].y;
+      },
+      
+      createBall: function() {
+        // Create ball using graphics
+        this.ball = game.add.graphics(0, 0);
+        this.ball.beginFill(THEMES[currentTheme].ballColor);
+        this.ball.drawCircle(0, 0, BALL_SIZE);
+        this.ball.endFill();
+        this.ball.position.set(game.world.centerX, game.world.centerY);
+        
+        game.physics.arcade.enable(this.ball);
+        
+        // Set up ball physics
+        this.ball.body.bounce.set(1);
+        this.ball.body.collideWorldBounds = true;
+        
+        // Set ball gravity from current theme
+        this.ball.body.gravity.y = THEMES[currentTheme].gravity;
+        
+        // Adjust the ball's body size for better collision
+        this.ball.body.setCircle(BALL_SIZE/2, -BALL_SIZE/2, -BALL_SIZE/2);
+        
+        // Start the particle emitter
+        this.ballEmitter.width = 1;
+        this.ballEmitter.height = 1;
+        this.ballEmitter.start(false, 400, 25);
+        this.ballEmitter.on = true;
+      },
+
+      startBallMovement: function() {
+        // Decide initial direction randomly (left or right)
+        var direction = Math.random() > 0.5 ? 1 : -1;
+        
+        // Random angle between -30 and 30 degrees
+        var angle = (Math.random() - 0.5) * Math.PI/3;
+        
+        // Set initial velocity
+        this.ball.body.velocity.x = direction * Math.cos(angle) * INITIAL_BALL_SPEED;
+        this.ball.body.velocity.y = Math.sin(angle) * INITIAL_BALL_SPEED;
+      },
+
+      update: function () {
+        // Store current positions before moving paddles
+        this.player.oldX = this.player.x;
+        this.player.oldY = this.player.y;
+        this.enemy.oldX = this.enemy.x;
+        this.enemy.oldY = this.enemy.y;
+        
+        // Handle player input
+        this.movePlayer();
+        this.moveEnemy();
+        
+        // Calculate paddle velocities
+        this.player.xVelocity = this.player.x - this.player.oldX;
+        this.player.yVelocity = this.player.y - this.player.oldY;
+        this.enemy.xVelocity = this.enemy.x - this.enemy.oldX;
+        this.enemy.yVelocity = this.enemy.y - this.enemy.oldY;
+        
+        // Update paddle rotations with spring-like motion
+        this.updatePaddleRotation(this.player);
+        this.updatePaddleRotation(this.enemy);
+        
+        // Update paddle glow effects
+        this.updatePaddleGlow(this.player);
+        this.updatePaddleGlow(this.enemy);
+        
+        // Update the ball trail effect
+        this.updateBallTrail();
+        
+        // Handle collisions
+        this.ballCollision();
+
+        // Check if ball went past paddles
+        if (this.ball.x >= game.width) {
+          this.updateScore('player');
+        }
+        else if (this.ball.x <= 0) {
+          this.updateScore('enemy');
+        }
+      },
+      
+      updateScore: function(scorer) {
+        // Update score
+        if (scorer === 'player') {
+          this.playerScore++;
+          this.player1ScoreElement.textContent = this.playerScore;
+          
+          // Flash the score text
+          this.player1ScoreElement.style.color = '#3ec9ff';
+          setTimeout(() => { this.player1ScoreElement.style.color = ''; }, 500);
+        } else {
+          this.enemyScore++;
+          this.player2ScoreElement.textContent = this.enemyScore;
+          
+          // Flash the score text
+          this.player2ScoreElement.style.color = '#3ec9ff';
+          setTimeout(() => { this.player2ScoreElement.style.color = ''; }, 500);
+        }
+        
+        // Reset the ball
+        this.ballLost();
+      },
+      
+      updateBallTrail: function() {
+        // Update particle emitter position to follow the ball
+        this.ballEmitter.x = this.ball.x;
+        this.ballEmitter.y = this.ball.y;
+        
+        // Adjust particle properties based on ball speed
+        var speed = Math.sqrt(this.ball.body.velocity.x * this.ball.body.velocity.x + 
+                            this.ball.body.velocity.y * this.ball.body.velocity.y);
+        
+        // More particles at higher speeds
+        this.ballEmitter.frequency = Math.max(50, 300 - speed/10);
+        
+        // Update particle color based on current theme
+        this.ballEmitter.forEach(function(particle) {
+          particle.tint = THEMES[currentTheme].particleColor;
+        });
+      },
+      
+      updatePaddleGlow: function(paddle) {
+        // Update paddle glow position and rotation
+        paddle.paddleGlow.x = paddle.x;
+        paddle.paddleGlow.y = paddle.y;
+        paddle.paddleGlow.rotation = paddle.rotation;
+        
+        // Show glow effect when paddle is moving
+        var paddleSpeed = Math.abs(paddle.body.velocity.x) + Math.abs(paddle.body.velocity.y);
+        paddle.paddleGlow.visible = paddleSpeed > 50;
+        
+        // Make glow brighter with more speed
+        paddle.paddleGlow.alpha = Math.min(0.4, paddleSpeed / 500);
+      },
+
+      updatePaddleRotation: function(paddle) {
+        // Spring-like motion toward target rotation
+        var rotationDiff = paddle.targetRotation - paddle.rotation;
+        paddle.rotation += rotationDiff * SPRING_STIFFNESS;
+      },
+
+      movePlayer: function () {
+        // Vertical movement
+        if (this.wasd.up.isDown) {
+          this.player.body.velocity.y = -MOVE_SPEED;
+        }
+        else if (this.wasd.down.isDown) {
+          this.player.body.velocity.y = MOVE_SPEED;
+        }
+        else {
+          this.player.body.velocity.y = 0;
+        }
+        
+        // Horizontal movement for left paddle (limited range)
+        if (this.wasd.left.isDown && this.player.x > 20) {
+          this.player.body.velocity.x = -MOVE_SPEED/2;
+        }
+        else if (this.wasd.right.isDown && this.player.x < 100) {
+          this.player.body.velocity.x = MOVE_SPEED/2;
+        }
+        else {
+          this.player.body.velocity.x = 0;
+        }
+        
+        // Rotation controls - A and D keys
+        if (this.wasd.left.isDown) {
+          this.player.targetRotation = -MAX_ROTATION;
+        }
+        else if (this.wasd.right.isDown) {
+          this.player.targetRotation = MAX_ROTATION;
+        }
+        else {
+          this.player.targetRotation = 0;
+        }
+      },
+
+      moveEnemy: function () {
+        // Vertical movement
+        if (this.cursor.up.isDown) {
+          this.enemy.body.velocity.y = -MOVE_SPEED;
+        }
+        else if (this.cursor.down.isDown) {
+          this.enemy.body.velocity.y = MOVE_SPEED;
+        }
+        else {
+          this.enemy.body.velocity.y = 0;
+        }
+        
+        // Horizontal movement for right paddle (limited range)
+        if (this.cursor.left.isDown && this.enemy.x > WINDOW_WIDTH - 100) {
+          this.enemy.body.velocity.x = -MOVE_SPEED/2;
+        }
+        else if (this.cursor.right.isDown && this.enemy.x < WINDOW_WIDTH - 20) {
+          this.enemy.body.velocity.x = MOVE_SPEED/2;
+        }
+        else {
+          this.enemy.body.velocity.x = 0;
+        }
+        
+        // Rotation controls - left and right arrow keys
+        if (this.cursor.left.isDown) {
+          this.enemy.targetRotation = -MAX_ROTATION;
+        }
+        else if (this.cursor.right.isDown) {
+          this.enemy.targetRotation = MAX_ROTATION;
+        }
+        else {
+          this.enemy.targetRotation = 0;
+        }
+      },
+
+      ballCollision: function () {
+        // Check for collisions between ball and paddles
+        game.physics.arcade.collide(this.player, this.ball, this.paddleHit, null, this);
+        game.physics.arcade.collide(this.enemy, this.ball, this.paddleHit, null, this);
+      },
+      
+      paddleHit: function(paddle, ball) {
+        // Add visual feedback for hit
+        this.createHitEffect(ball.x, ball.y);
+        
+        // Calculate new velocity based on paddle rotation
+        var speed = Math.sqrt(ball.body.velocity.x * ball.body.velocity.x + 
+                             ball.body.velocity.y * ball.body.velocity.y);
+        
+        // Base angle from collision point (relative to paddle center)
+        var collisionY = ball.y - paddle.y;
+        var normalizedY = collisionY / (PADDLE_HEIGHT/2);
+        var baseAngle = normalizedY * Math.PI/4; // Maximum ±45° angle
+        
+        // Add paddle rotation influence
+        var totalAngle = baseAngle + paddle.rotation;
+        
+        // Determine direction based on which paddle was hit
+        var direction = (paddle === this.player) ? 1 : -1;
+        
+        // Set new velocity with increased speed (10% faster)
+        speed *= 1.1;
+        ball.body.velocity.x = direction * Math.cos(totalAngle) * speed;
+        ball.body.velocity.y = Math.sin(totalAngle) * speed;
+        
+        // Apply paddle momentum transfer
+        ball.body.velocity.x += paddle.xVelocity * MOMENTUM_TRANSFER * 60;
+        ball.body.velocity.y += paddle.yVelocity * MOMENTUM_TRANSFER * 60;
+        
+        // Add a small random factor to y velocity for unpredictability
+        ball.body.velocity.y += (Math.random() - 0.5) * 40;
+        
+        // Ensure ball doesn't get stuck in paddle
+        if (paddle === this.player) {
+            ball.x = paddle.x + PADDLE_WIDTH/2 + BALL_SIZE/2 + 2;
+        } else {
+            ball.x = paddle.x - PADDLE_WIDTH/2 - BALL_SIZE/2 - 2;
+        }
+      },
+      
+      createHitEffect: function(x, y) {
+        // Create a one-time particle burst at hit location
+        var hitEmitter = game.add.emitter(x, y, 10);
+        hitEmitter.makeParticles('pixel');
+        hitEmitter.setXSpeed(-150, 150);
+        hitEmitter.setYSpeed(-150, 150);
+        hitEmitter.setScale(1, 3, 1, 3, 300);
+        hitEmitter.gravity = THEMES[currentTheme].gravity / 4;
+        
+        // Set particle color based on current theme
+        hitEmitter.forEach(function(particle) {
+          particle.tint = THEMES[currentTheme].particleColor;
+        })
+    },
+    ballLost: function() {
+        // Reset ball position
+        this.ball.x = game.world.centerX;
+        this.ball.y = game.world.centerY;
+        
+        // Reset ball velocity
+        this.ball.body.velocity.x = 0;
+        this.ball.body.velocity.y = 0;
+        
+        // Show "Get Ready" message
+        var readyText = game.add.text(game.world.centerX, game.world.centerY, 'Get Ready!', 
+          { font: '28px Arial', fill: '#ffffff' });
+        readyText.anchor.setTo(0.5, 0.5);
+        readyText.alpha = 0;
+        
+        // Fade in and out animation
+        game.add.tween(readyText).to({ alpha: 1 }, 500, Phaser.Easing.Linear.None, true)
+          .chain(game.add.tween(readyText).to({ alpha: 0 }, 500, Phaser.Easing.Linear.None, true, 1000));
+        
+        // Wait a moment, then start the ball again
+        game.time.events.add(2000, function() {
+          this.startBallMovement();
+        }, this);
+      }
+    };
+
+    // Initialize the game
+    var game = new Phaser.Game(
+      WINDOW_WIDTH, 
+      WINDOW_HEIGHT, 
+      Phaser.AUTO, 
+      'gameDiv',
+      mainState
+    );
+
+    // Add theme selection functionality
+    document.addEventListener('DOMContentLoaded', function() {
+      // Create theme selection buttons
+      var themeSelector = document.createElement('div');
+      themeSelector.className = 'theme-selector';
+      
+      // Add title
+      var themeTitle = document.createElement('div');
+      themeTitle.className = 'theme-title';
+      themeTitle.textContent = 'Select Gravity:';
+      themeSelector.appendChild(themeTitle);
+      
+      // Create buttons for each theme
+      Object.keys(THEMES).forEach(function(themeName) {
+        var theme = THEMES[themeName];
+        var button = document.createElement('button');
+        button.className = 'theme-button';
+        button.setAttribute('data-theme', themeName);
+        button.innerHTML = '<i class="fas ' + theme.icon + '"></i> ' + theme.name;
+        
+        // Set active state for current theme
+        if (themeName === currentTheme) {
+          button.classList.add('active');
+        }
+        
+        // Add click event
+        button.addEventListener('click', function() {
+          // Update active button
+          document.querySelectorAll('.theme-button').forEach(function(btn) {
+            btn.classList.remove('active');
+          });
+          this.classList.add('active');
+          
+          // Apply theme
+          var selectedTheme = this.getAttribute('data-theme');
+          game.state.getCurrentState().applyTheme(selectedTheme);
+        });
+        
+        themeSelector.appendChild(button);
+      });
+      
+      // Add to game container
+      document.getElementById('gameDiv').appendChild(themeSelector);
+      
+      // Add touch controls for mobile
+      var touchControls = document.createElement('div');
+      touchControls.className = 'touch-controls';
+      
+      var leftControls = document.createElement('div');
+      leftControls.className = 'left-controls';
+      
+      var rightControls = document.createElement('div');
+      rightControls.className = 'right-controls';
+      
+      // Left player controls
+      ['up', 'down', 'left', 'right'].forEach(function(direction) {
+        var button = document.createElement('button');
+        button.className = 'control-button p1-' + direction;
+        button.innerHTML = '<i class="fas fa-chevron-' + direction + '"></i>';
+        
+        // Touch events for continuous movement
+        button.addEventListener('touchstart', function() {
+          if (direction === 'up') game.state.getCurrentState().wasd.up.isDown = true;
+          if (direction === 'down') game.state.getCurrentState().wasd.down.isDown = true;
+          if (direction === 'left') game.state.getCurrentState().wasd.left.isDown = true;
+          if (direction === 'right') game.state.getCurrentState().wasd.right.isDown = true;
+        });
+        
+        button.addEventListener('touchend', function() {
+          if (direction === 'up') game.state.getCurrentState().wasd.up.isDown = false;
+          if (direction === 'down') game.state.getCurrentState().wasd.down.isDown = false;
+          if (direction === 'left') game.state.getCurrentState().wasd.left.isDown = false;
+          if (direction === 'right') game.state.getCurrentState().wasd.right.isDown = false;
+        });
+        
+        leftControls.appendChild(button);
+      });
+      
+      // Right player controls
+      ['up', 'down', 'left', 'right'].forEach(function(direction) {
+        var button = document.createElement('button');
+        button.className = 'control-button p2-' + direction;
+        button.innerHTML = '<i class="fas fa-chevron-' + direction + '"></i>';
+        
+        // Touch events for continuous movement
+        button.addEventListener('touchstart', function() {
+          if (direction === 'up') game.state.getCurrentState().cursor.up.isDown = true;
+          if (direction === 'down') game.state.getCurrentState().cursor.down.isDown = true;
+          if (direction === 'left') game.state.getCurrentState().cursor.left.isDown = true;
+          if (direction === 'right') game.state.getCurrentState().cursor.right.isDown = true;
+        });
+        
+        button.addEventListener('touchend', function() {
+          if (direction === 'up') game.state.getCurrentState().cursor.up.isDown = false;
+          if (direction === 'down') game.state.getCurrentState().cursor.down.isDown = false;
+          if (direction === 'left') game.state.getCurrentState().cursor.left.isDown = false;
+          if (direction === 'right') game.state.getCurrentState().cursor.right.isDown = false;
+        });
+        
+        rightControls.appendChild(button);
+      });
+      
+      touchControls.appendChild(leftControls);
+      touchControls.appendChild(rightControls);
+      document.getElementById('gameDiv').appendChild(touchControls);
+      
+      // Only show touch controls on touch devices
+      if (!('ontouchstart' in window)) {
+        touchControls.style.display = 'none';
+      }
+    });
+  </script>
+</html>
+    
+
