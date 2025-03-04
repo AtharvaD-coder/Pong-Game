@@ -21,7 +21,8 @@
     
     body {
       margin: 0;
-      overflow: hidden;
+      overflow: auto;
+      height: 100vh;
       font-family: 'Orbitron', sans-serif;
       background-color: var(--background-dark);
       color: var(--text-color);
@@ -71,6 +72,7 @@
       display: flex;
       align-items: center;
       gap: 8px;
+      margin-top: 20px;
     }
 
     .theme-button:hover {
@@ -178,6 +180,7 @@
     
     canvas {
       display: block;
+      
     }
     
     .vs-text {
@@ -185,6 +188,37 @@
       opacity: 0.6;
       margin-top: 10px;
     }
+
+    .theme-selector {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center; /* Center align the buttons */
+  gap: 10px; /* Space between buttons */
+  margin-bottom: 20px;
+}
+
+.theme-button {
+  padding: 10px 15px;
+  font-size: 16px;
+  cursor: pointer;
+  border: none;
+  border-radius: 5px;
+  background-color: #444;
+  color: white;
+  transition: background 0.3s;
+}
+
+.theme-button.active {
+  background-color: #666;
+}
+
+.theme-title {
+  margin-top: 25px; /* Moves the text down */
+  font-size: 1.4rem; /* Optional: Make it slightly bigger */
+  text-align: center;
+}
+
+
   </style>
 </head>
 
@@ -192,7 +226,7 @@
   <div class="game-container">
     <h1>COSMIC PONG</h1>
     
-    <div class="theme-bar">
+    <!-- <div class="theme-bar">
       <button class="theme-button active" data-theme="earth">
         <i class="fas fa-globe-americas"></i> Earth
       </button>
@@ -208,7 +242,7 @@
       <button class="theme-button" data-theme="jupiter">
         <i class="fas fa-globe"></i> Jupiter
       </button>
-    </div>
+    </div> -->
     
     
     <div class="instructions">
